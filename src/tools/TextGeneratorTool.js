@@ -1,164 +1,95 @@
 import { BaseTool } from './BaseTool.js';
-import { PanelContent } from '../ui3d/PanelContent.js';
-import { ProgressBar3D } from '../ui3d/ProgressBar3D.js';
-import { ButtonMesh } from '../ui3d/ButtonMesh.js';
-import { SliderMesh } from '../ui3d/SliderMesh.js';
-import { TextRenderer } from '../ui3d/TextRenderer.js';
 import { eventBus } from '../events.js';
 import { EVENTS } from '../constants.js';
 
 export class TextGeneratorTool extends BaseTool {
   constructor(opts) {
     super(opts);
-    this.panelWidth = 2.4;
-    this.panelHeight = 2.2;
     this._outputText = '';
-    this._contentCanvas = null;
     this._maxTokens = 256;
     this._temperature = 0.7;
-    this._unsubs = [];
-    this._htmlOverlay = null;
+    this._streaming = false;
   }
 
-  onActivate() {
-    // Progress bar
-    this._progressBar = new ProgressBar3D(0.12);
-    this._progressBar.group.position.set(0, 0.3, 0.01);
-    this._progressBar.group.visible = false;
-    this.panel.contentGroup.add(this._progressBar.group);
+  onActivate(body) {
+    body.innerHTML = `
+      <div class="flex-col gap-12">
+        <div>
+          <label class="label">Prompt</label>
+          <textarea class="textarea" id="tg-prompt" placeholder="Enter your prompt here..." rows="3"></textarea>
+        </div>
+        <div class="flex gap-8">
+          <div class="slider-group" style="flex:1">
+            <label class="label">Temperature: <span id="tg-temp-val">0.7</span></label>
+            <input type="range" id="tg-temp" min="0.1" max="2.0" step="0.1" value="0.7" />
+          </div>
+          <div class="slider-group" style="flex:1">
+            <label class="label">Max tokens: <span id="tg-tokens-val">256</span></label>
+            <input type="range" id="tg-tokens" min="32" max="512" step="32" value="256" />
+          </div>
+        </div>
+        <div class="flex gap-8">
+          <button class="btn btn--primary btn--sm" id="tg-load">Load Model</button>
+          <button class="btn btn--secondary btn--sm" id="tg-generate" disabled>Generate</button>
+        </div>
+        <div>
+          <label class="label">Output</label>
+          <div class="text-output" id="tg-output">Generated text will appear here...</div>
+        </div>
+      </div>
+    `;
 
-    // Content canvas for output
-    this._contentCanvas = new PanelContent(512, 400);
-    this._drawInitialContent();
-    this.panel.setContentTexture(this._contentCanvas.texture);
-
-    // Status text
-    this._statusText = TextRenderer.create({
-      text: 'Click "Load Model" to start',
-      fontSize: 0.04,
-      color: '#9b9bbb',
-      anchorX: 'center',
-      anchorY: 'middle',
+    const tempSlider = body.querySelector('#tg-temp');
+    const tempVal = body.querySelector('#tg-temp-val');
+    tempSlider.addEventListener('input', () => {
+      this._temperature = parseFloat(tempSlider.value);
+      tempVal.textContent = this._temperature.toFixed(1);
     });
-    this._statusText.position.set(0, 0.55, 0.01);
-    this.panel.contentGroup.add(this._statusText);
 
-    // Load button
-    const loadBtn = new ButtonMesh({
-      width: 0.5,
-      height: 0.08,
-      label: 'Load Model',
-      color: 0x9b59ff,
-      onClick: () => this.loadModel(),
+    const tokensSlider = body.querySelector('#tg-tokens');
+    const tokensVal = body.querySelector('#tg-tokens-val');
+    tokensSlider.addEventListener('input', () => {
+      this._maxTokens = parseInt(tokensSlider.value, 10);
+      tokensVal.textContent = this._maxTokens;
     });
-    loadBtn.group.position.set(-0.5, -0.85, 0.01);
-    this.panel.contentGroup.add(loadBtn.group);
 
-    // Generate button
-    const genBtn = new ButtonMesh({
-      width: 0.5,
-      height: 0.08,
-      label: 'Generate',
-      color: 0x00d4ff,
-      onClick: () => this._generate(),
-    });
-    genBtn.group.position.set(0.5, -0.85, 0.01);
-    this.panel.contentGroup.add(genBtn.group);
+    body.querySelector('#tg-load').addEventListener('click', () => this.loadModel());
+    body.querySelector('#tg-generate').addEventListener('click', () => this._generate());
 
-    // Temperature slider
-    const tempSlider = new SliderMesh({
-      width: 0.5,
-      min: 0.1,
-      max: 2.0,
-      value: this._temperature,
-      label: 'Temperature',
-      onChange: (v) => { this._temperature = v; },
-    });
-    tempSlider.group.position.set(0.5, -0.95, 0.01);
-    this.panel.contentGroup.add(tempSlider.group);
-
-    const tempLabel = TextRenderer.create({
-      text: 'Temperature',
-      fontSize: 0.03,
-      color: '#9b9bbb',
-      anchorX: 'center',
-      anchorY: 'middle',
-    });
-    tempLabel.position.set(0.5, -0.9, 0.01);
-    this.panel.contentGroup.add(tempLabel);
-
-    // HTML text input overlay
-    this._createHTMLOverlay();
-
-    // Events
     this._unsubs.push(
-      eventBus.on(EVENTS.MODEL_DOWNLOAD_PROGRESS, (data) => {
-        if (data.toolType !== this.type) return;
-        this._progressBar.group.visible = true;
-        this._progressBar.setProgress(data.progress / 100);
-        this._statusText.text = `Downloading: ${Math.round(data.progress)}%`;
-        this._statusText.sync();
-      }),
-      eventBus.on(EVENTS.MODEL_READY, (data) => {
-        if (data.toolType !== this.type) return;
-        this._progressBar.group.visible = false;
-        this._statusText.text = 'Model ready! Enter a prompt.';
-        this._statusText.sync();
-      }),
       eventBus.on(EVENTS.INFERENCE_PROGRESS, (data) => {
         if (data.toolType !== this.type) return;
         this._outputText = data.fullText;
-        this._drawOutput();
-      }),
-      eventBus.on(EVENTS.INFERENCE_COMPLETE, (data) => {
-        if (data.toolType !== this.type) return;
-        this._outputText = data.result;
-        this._drawOutput();
-        this._statusText.text = 'Generation complete!';
-        this._statusText.sync();
+        this._renderOutput(true);
       })
     );
   }
 
   onDeactivate() {
-    for (const unsub of this._unsubs) unsub();
-    this._unsubs = [];
-    if (this._htmlOverlay && this._htmlOverlay.parentNode) {
-      this._htmlOverlay.parentNode.removeChild(this._htmlOverlay);
-    }
+    this._outputText = '';
+    this._streaming = false;
   }
 
-  _createHTMLOverlay() {
-    this._htmlOverlay = document.createElement('div');
-    this._htmlOverlay.className = 'html-input-overlay';
-    this._htmlOverlay.style.cssText = 'bottom: 80px; left: 50%; transform: translateX(-50%); width: 400px;';
-
-    const textarea = document.createElement('textarea');
-    textarea.placeholder = 'Enter your prompt here...';
-    textarea.rows = 3;
-    textarea.style.width = '100%';
-    this._textarea = textarea;
-
-    this._htmlOverlay.appendChild(textarea);
-    document.getElementById('overlay').appendChild(this._htmlOverlay);
+  onModelReady() {
+    const genBtn = this.body.querySelector('#tg-generate');
+    if (genBtn) genBtn.disabled = false;
   }
 
-  async _generate() {
-    const prompt = this._textarea?.value?.trim();
+  _generate() {
+    const prompt = this.body.querySelector('#tg-prompt')?.value?.trim();
     if (!prompt) {
-      this._statusText.text = 'Please enter a prompt first.';
-      this._statusText.sync();
+      this._setStatus('Enter a prompt first');
       return;
     }
     if (!this.modelLoaded) {
-      this._statusText.text = 'Load the model first!';
-      this._statusText.sync();
+      this._setStatus('Load the model first');
       return;
     }
 
-    this._statusText.text = 'Generating...';
-    this._statusText.sync();
     this._outputText = '';
+    this._streaming = true;
+    this._renderOutput(true);
+    this._setStatus('Generating...');
 
     const worker = this.aiManager.getWorker(this.type);
     worker.postMessage({
@@ -171,43 +102,31 @@ export class TextGeneratorTool extends BaseTool {
     });
   }
 
-  _drawOutput() {
-    this._contentCanvas
-      .clear()
-      .fillBackground()
-      .drawText('Output:', 10, 20, {
-        color: '#9b59ff',
-        font: 'bold 14px Segoe UI, system-ui, sans-serif',
-      })
-      .drawText(this._outputText || '...', 10, 45, {
-        color: '#e0e0e0',
-        font: '13px Segoe UI, system-ui, sans-serif',
-        maxWidth: 490,
-      })
-      .update();
-  }
+  onInferenceComplete(result) {
+    this._outputText = typeof result === 'string' ? result : (result?.text || JSON.stringify(result));
+    this._streaming = false;
+    this._renderOutput(false);
+    this._setStatus('Generation complete');
 
-  _drawInitialContent() {
-    this._contentCanvas
-      .clear()
-      .fillBackground()
-      .drawText('Text Generation', 10, 25, {
-        color: '#9b59ff',
-        font: 'bold 16px Segoe UI, system-ui, sans-serif',
-      })
-      .drawText('Generate text using SmolLM2-360M running locally in your browser.', 10, 55, {
-        color: '#9b9bbb',
-        font: '13px Segoe UI, system-ui, sans-serif',
-        maxWidth: 490,
-      })
-      .update();
-  }
-
-  onInferenceComplete(data) {
     this.storage.addHistory({
       toolType: this.type,
-      prompt: this._textarea?.value,
-      result: data.result,
+      prompt: this.body.querySelector('#tg-prompt')?.value,
+      result: this._outputText,
     });
+  }
+
+  _renderOutput(streaming) {
+    const el = this.body.querySelector('#tg-output');
+    if (!el) return;
+    el.className = streaming ? 'text-output text-output--streaming' : 'text-output';
+    const cursor = streaming ? '<span class="text-output__cursor"></span>' : '';
+    el.innerHTML = this._escapeHtml(this._outputText || '...') + cursor;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  _escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 }

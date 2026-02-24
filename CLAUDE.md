@@ -1,12 +1,12 @@
-# CLAUDE.md — Spatial AI Workbench
+# CLAUDE.md — AI Workbench
 
 This file is read by Claude Code at the start of every session. It provides persistent context, rules, and project knowledge.
 
 ## Project Overview
 
-Spatial AI Workbench is a browser-based 3D environment combining Three.js visualization with Hugging Face Transformers for in-browser AI inference. Users navigate a first-person 3D room, interact with glassmorphic UI panels, and run AI tools (image classification, text generation, image generation) via Web Workers.
+AI Workbench is a browser-based dashboard for running AI models locally using Hugging Face Transformers. Users interact with a clean glassmorphism UI to run image classification, text generation, and image generation — all via Web Workers with no server required.
 
-**Stack:** Vite 6 + Three.js 0.170 + Troika Text + @huggingface/transformers 3.x
+**Stack:** Vite 6 + @huggingface/transformers 3.x + vanilla JS
 **Storage:** IndexedDB + OPFS (model cache) + localStorage (prefs)
 **Architecture:** Event-driven (EventBus pub/sub), modular managers, Web Workers for ML inference
 
@@ -23,31 +23,29 @@ Spatial AI Workbench is a browser-based 3D environment combining Three.js visual
 - Immutable patterns: spread operator, never mutate state directly
 - Class-based architecture with clear manager/tool/component separation
 - Constants in `src/constants.js`, events in `src/events.js`
-- IMPORTANT: All 3D UI components use custom GLSL shaders — do not replace with CSS
 - Web Workers for heavy computation — never run ML inference on main thread
+- DOM-based UI with CSS glassmorphism — no canvas rendering for UI
 
 ## Architecture Rules
 
-- **Managers** orchestrate lifecycle: SceneManager, PanelManager, AIManager, StorageManager
-- **Tools** extend BaseTool — register via ToolRegistry, never instantiate directly
-- **Panels** are 3D meshes with canvas textures — not DOM elements
+- **UI Components** (src/ui/) render DOM elements — Sidebar, Workspace, StatusBar, Toast
+- **Tools** extend BaseTool — register via ToolRegistry, render into Workspace cards
+- **AI Layer** (src/ai/) manages Web Workers and model lifecycle
 - **Events** decouple all communication — components never import each other directly
 - New tools MUST: extend BaseTool, register in ToolRegistry, use Web Worker for inference
-- New panels MUST: go through PanelManager for z-ordering and focus management
 
 ## File Structure
 
 ```
 src/
 ├── ai/          # AIManager, ModelRegistry, PipelineExecutor, Web Workers
-├── input/       # KeyboardControls, PointerLock, RaycastInteraction, XRInputHandler
-├── scene/       # SceneManager, CameraController, Lighting, Room, PostProcessing
-├── ui3d/        # Panel3D, PanelManager, PanelControls, ToolShelf, ButtonMesh, SliderMesh
+├── ui/          # Sidebar, Workspace, StatusBar, Toast
 ├── tools/       # ToolRegistry, BaseTool, ImageClassifier, TextGenerator, ImageGenerator
 ├── storage/     # StorageManager, IndexedDBStore, OPFSStore, ModelCacheManager
 ├── onboarding/  # OnboardingOverlay, CapabilityDetector
-├── utils/       # animate, debounce, disposable, formatBytes
-├── constants.js # Global constants, colors, dimensions
+├── utils/       # debounce, formatBytes
+├── styles/      # main.css (glassmorphism, layout, components)
+├── constants.js # Tool types, events, storage keys
 ├── events.js    # EventBus pub/sub system
 └── main.js      # Application bootstrap
 ```
@@ -56,10 +54,7 @@ src/
 
 - Vite config requires custom COEP/COOP headers for SharedArrayBuffer (Web Workers)
 - @huggingface/transformers is excluded from Vite pre-optimization (too large, dynamic imports)
-- Image generator requires WebGPU — check `CapabilityDetector` before enabling
-- Troika text rendering is async — always await text sync before measuring bounds
-- Pointer lock only works after user gesture — never call requestPointerLock() on page load
-- Panel content uses Canvas2D textures — must call `needsUpdate = true` after drawing
+- Image generator requires WebGPU — check CapabilityDetector before enabling
 
 ## Self-Improvement Protocol
 

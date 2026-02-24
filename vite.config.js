@@ -11,6 +11,7 @@ export default defineConfig({
     exclude: ['@huggingface/transformers'],
   },
   server: {
+    port: 5177,
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',

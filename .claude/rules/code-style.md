@@ -13,14 +13,14 @@
 ## File Organization
 - One class per file, file named after the class
 - Constants in `src/constants.js`, events in `src/events.js`
-- Organize by feature domain: ai/, scene/, ui3d/, tools/, input/, storage/
+- Organize by feature domain: ai/, ui/, tools/, storage/, onboarding/, utils/
 - Target: 200-400 lines per file, maximum 800 lines
 
 ## Naming
-- Classes: PascalCase (SceneManager, Panel3D)
-- Methods/functions: camelCase (spawnPanel, handleClick)
-- Constants: UPPER_SNAKE_CASE (PANEL_WIDTH, EVENTS.PANEL_SPAWN)
-- Files: PascalCase for classes (SceneManager.js), camelCase for utilities (debounce.js)
+- Classes: PascalCase (StorageManager, BaseTool)
+- Methods/functions: camelCase (addCard, handleClick)
+- Constants: UPPER_SNAKE_CASE (TOOL_TYPES, EVENTS.TOOL_ACTIVATE)
+- Files: PascalCase for classes (StorageManager.js), camelCase for utilities (debounce.js)
 - Private methods: prefix with underscore (_updateLayout)
 
 ## Functions
@@ -29,8 +29,8 @@
 - No default exports — always named exports
 - Arrow functions for callbacks, regular functions for methods
 
-## 3D Code
-- All 3D UI uses custom GLSL shaders — never CSS overlays
-- Canvas2D for panel content textures
-- Always dispose geometries, materials, textures in cleanup methods
-- Set `texture.needsUpdate = true` after Canvas2D drawing
+## UI Code
+- DOM-based UI with CSS glassmorphism
+- Styles in src/styles/main.css with CSS custom properties
+- No inline styles except dynamic values
+- Clean up DOM elements and event listeners in deactivate/dispose methods

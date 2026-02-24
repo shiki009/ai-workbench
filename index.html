@@ -3,84 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spatial AI Workbench</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a1a; }
-    #app { width: 100%; height: 100%; position: relative; }
-    canvas { display: block; }
-    #overlay {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 10;
-    }
-    #overlay > * { pointer-events: auto; }
-    #hud {
-      position: absolute;
-      bottom: 20px; left: 50%;
-      transform: translateX(-50%);
-      color: #00d4ff;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      font-size: 13px;
-      opacity: 0.7;
-      text-align: center;
-      pointer-events: none;
-      user-select: none;
-    }
-    #crosshair {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 20px; height: 20px;
-      pointer-events: none;
-      display: none;
-    }
-    #crosshair::before, #crosshair::after {
-      content: '';
-      position: absolute;
-      background: rgba(0, 212, 255, 0.6);
-    }
-    #crosshair::before {
-      width: 2px; height: 100%;
-      left: 50%; transform: translateX(-50%);
-    }
-    #crosshair::after {
-      width: 100%; height: 2px;
-      top: 50%; transform: translateY(-50%);
-    }
-    .html-input-overlay {
-      position: absolute;
-      z-index: 20;
-      pointer-events: auto;
-    }
-    .html-input-overlay textarea,
-    .html-input-overlay input {
-      background: rgba(10, 10, 26, 0.9);
-      border: 1px solid rgba(0, 212, 255, 0.3);
-      color: #e0e0e0;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      font-size: 14px;
-      padding: 8px;
-      border-radius: 4px;
-      outline: none;
-      resize: none;
-    }
-    .html-input-overlay textarea:focus,
-    .html-input-overlay input:focus {
-      border-color: rgba(0, 212, 255, 0.7);
-      box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
-    }
-  </style>
+  <title>AI Workbench</title>
+  <link rel="stylesheet" href="/src/styles/main.css" />
 </head>
 <body>
   <div id="app">
-    <div id="overlay">
-      <div id="hud">Click to enter workspace — WASD to move, Mouse to look</div>
-      <div id="crosshair"></div>
+    <header class="header">
+      <div class="header__brand">
+        <span class="header__logo">AI</span>
+        <h1 class="header__title">Workbench</h1>
+      </div>
+      <div class="header__status" id="status-bar"></div>
+      <div class="header__actions">
+        <button class="btn btn--ghost" id="btn-settings" title="Settings">
+          <span class="btn__icon">&#9881;</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <nav class="sidebar__nav" id="tool-nav"></nav>
+      </aside>
+
+      <main class="workspace" id="workspace">
+        <div class="workspace__empty" id="workspace-empty">
+          <p class="workspace__hint">Select a tool from the sidebar to get started</p>
+          <p class="workspace__shortcut">Press <kbd>E</kbd> to toggle the sidebar</p>
+        </div>
+        <div class="workspace__cards" id="workspace-cards"></div>
+      </main>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+  <div id="onboarding-overlay" class="onboarding" style="display:none">
+    <div class="onboarding__card glass">
+      <h2 class="onboarding__title" id="onboarding-title"></h2>
+      <div class="onboarding__body" id="onboarding-body"></div>
+      <div class="onboarding__actions">
+        <button class="btn btn--primary" id="onboarding-next">Next</button>
+        <button class="btn btn--ghost" id="onboarding-skip">Skip</button>
+      </div>
+      <div class="onboarding__dots" id="onboarding-dots"></div>
     </div>
   </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

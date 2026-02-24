@@ -1,51 +1,85 @@
-import { Panel3D } from '../ui3d/Panel3D.js';
-import { TextRenderer } from '../ui3d/TextRenderer.js';
-import { PanelContent } from '../ui3d/PanelContent.js';
-import { PANEL } from '../constants.js';
+import { eventBus } from '../events.js';
+import { EVENTS } from '../constants.js';
 
 export class BaseTool {
-  constructor({ type, label, panelManager, aiManager, storage }) {
+  constructor({ type, label, icon, workspace, aiManager, storage }) {
     this.type = type;
     this.label = label;
-    this.panelManager = panelManager;
+    this.icon = icon;
+    this.workspace = workspace;
     this.aiManager = aiManager;
     this.storage = storage;
-    this.panel = null;
     this.active = false;
     this.modelLoaded = false;
+    this._unsubs = [];
   }
 
   activate() {
     if (this.active) return;
     this.active = true;
-    this.panel = this.panelManager.spawnPanel({
-      width: this.panelWidth || PANEL.DEFAULT_WIDTH,
-      height: this.panelHeight || PANEL.DEFAULT_HEIGHT,
+
+    const body = this.workspace.addCard(this.type, {
+      icon: this.icon,
       title: this.label,
     });
-    this.panel._toolRef = this;
-    this.onActivate();
+
+    this.body = body;
+    this._setupBaseEvents();
+    this.onActivate(body);
   }
 
   deactivate() {
     if (!this.active) return;
     this.active = false;
-    this.aiManager.terminateWorker(this.type);
-    if (this.panel) {
-      this.panelManager.removePanel(this.panel);
-      this.panel = null;
-    }
+    this._cleanupEvents();
     this.onDeactivate();
+    this.aiManager.terminateWorker(this.type);
+    this.workspace.removeCard(this.type);
+    this.body = null;
   }
 
   async loadModel() {
     if (this.modelLoaded) return;
+    this._setStatus('Loading model...');
     await this.aiManager.loadModel(this.type);
   }
 
+  _setupBaseEvents() {
+    this._unsubs.push(
+      eventBus.on(EVENTS.MODEL_DOWNLOAD_PROGRESS, (data) => {
+        if (data.toolType !== this.type) return;
+        this._setStatus(`
+          <span>Downloading: ${Math.round(data.progress)}%</span>
+          <div class="progress" style="width:100px">
+            <div class="progress__fill" style="width:${Math.round(data.progress)}%"></div>
+          </div>
+        `);
+      }),
+      eventBus.on(EVENTS.MODEL_READY, (data) => {
+        if (data.toolType !== this.type) return;
+        this.modelLoaded = true;
+        this._setStatus('Model ready');
+        this.onModelReady();
+      }),
+      eventBus.on(EVENTS.INFERENCE_COMPLETE, (data) => {
+        if (data.toolType !== this.type) return;
+        this.onInferenceComplete(data.result);
+      })
+    );
+  }
+
+  _cleanupEvents() {
+    for (const unsub of this._unsubs) unsub();
+    this._unsubs = [];
+  }
+
+  _setStatus(html) {
+    this.workspace.setStatus(this.type, html);
+  }
+
   // Override in subclasses
-  onActivate() {}
+  onActivate(body) {}
   onDeactivate() {}
-  onModelReady() { this.modelLoaded = true; }
+  onModelReady() {}
   onInferenceComplete(result) {}
 }
