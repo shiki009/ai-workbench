@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 import { analyzeRouter } from './routes/analyze.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -11,6 +12,20 @@ const isProd = process.env.NODE_ENV === 'production';
 const app = express();
 
 app.use(express.json());
+
+// Debug endpoint — check system binaries
+app.get('/api/debug', (req, res) => {
+  const check = (cmd) => {
+    try { return execSync(cmd, { encoding: 'utf8' }).trim(); }
+    catch { return 'NOT FOUND'; }
+  };
+  res.json({
+    python3: check('which python3'),
+    ffmpeg: check('which ffmpeg'),
+    ytdlp: check('which yt-dlp'),
+    path: process.env.PATH,
+  });
+});
 
 // API routes
 app.use('/api', analyzeRouter);
