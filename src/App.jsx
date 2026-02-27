@@ -14,12 +14,6 @@ export function App() {
 
   const handleSubmit = (url) => {
     const { apiKeys, provider } = settings;
-
-    if (!apiKeys.groq) {
-      setSettingsOpen(true);
-      return;
-    }
-
     analyze(url, apiKeys, provider);
   };
 
