@@ -5,7 +5,13 @@ const VERDICT_STYLES = {
   UNVERIFIABLE: { bg: 'bg-unverifiable', text: 'text-card', label: 'UNVERIFIABLE' },
 };
 
-export function ClaimCard({ claim, verdict, explanation }) {
+const SOURCE_LABELS = {
+  'audio': 'SPOKEN',
+  'on-screen': 'ON-SCREEN',
+  'both': 'SPOKEN + ON-SCREEN',
+};
+
+export function ClaimCard({ claim, verdict, explanation, source }) {
   const style = VERDICT_STYLES[verdict] || VERDICT_STYLES.UNVERIFIABLE;
 
   return (
@@ -17,6 +23,11 @@ export function ClaimCard({ claim, verdict, explanation }) {
         </span>
       </div>
       <p className="text-sm text-muted">{explanation}</p>
+      {source && (
+        <p className="text-xs text-muted mt-2 uppercase tracking-wider">
+          Source: {SOURCE_LABELS[source] || source}
+        </p>
+      )}
     </div>
   );
 }

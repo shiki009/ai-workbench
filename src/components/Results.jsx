@@ -42,7 +42,8 @@ const VERDICT_STYLES = {
 export function Results({ result, onReset }) {
   const [showTranscript, setShowTranscript] = useState(false);
 
-  const { truthScore, verdict, summary, claims, transcript } = result;
+  const [showOnScreen, setShowOnScreen] = useState(false);
+  const { truthScore, verdict, summary, claims, transcript, onScreenText } = result;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -83,6 +84,23 @@ export function Results({ result, onReset }) {
           {showTranscript && (
             <div className="mt-3 bg-card border-2 border-foreground shadow-brutal-sm p-4">
               <p className="text-sm text-muted whitespace-pre-wrap">{transcript}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* On-screen text toggle */}
+      {onScreenText && (
+        <div>
+          <button
+            onClick={() => setShowOnScreen(!showOnScreen)}
+            className="text-sm font-bold text-foreground underline underline-offset-4 hover:text-muted transition-colors uppercase tracking-wider"
+          >
+            {showOnScreen ? 'Hide On-Screen Text' : 'Show On-Screen Text'}
+          </button>
+          {showOnScreen && (
+            <div className="mt-3 bg-card border-2 border-foreground shadow-brutal-sm p-4">
+              <p className="text-sm text-muted whitespace-pre-wrap">{onScreenText}</p>
             </div>
           )}
         </div>

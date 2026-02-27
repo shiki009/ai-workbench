@@ -1,6 +1,6 @@
 const STEP_CONFIG = [
   { key: 'downloading', label: 'Downloading video' },
-  { key: 'transcribing', label: 'Transcribing audio' },
+  { key: 'transcribing', label: 'Transcribing audio + reading on-screen text' },
   { key: 'analyzing', label: 'Analyzing claims' },
 ];
 

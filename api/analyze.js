@@ -1,5 +1,7 @@
 import { downloadVideo } from '../server/services/videoExtractor.js';
 import { transcribeAudio } from '../server/services/transcriber.js';
+import { extractFrames, cleanupFrames } from '../server/services/frameExtractor.js';
+import { readOnScreenText } from '../server/services/ocrReader.js';
 import { factCheck } from '../server/services/factChecker.js';
 import { cleanupFile } from '../server/utils/cleanup.js';
 
@@ -37,6 +39,7 @@ export default async function handler(req, res) {
   });
 
   let videoPath = null;
+  let frameDir = null;
 
   try {
     // Step 1: Download video
@@ -44,26 +47,36 @@ export default async function handler(req, res) {
     videoPath = await downloadVideo(url);
     sendSSE(res, 'step', { step: 'downloading', status: 'done' });
 
-    // Step 2: Transcribe
+    // Step 2: Transcribe audio + read on-screen text in parallel
     sendSSE(res, 'step', { step: 'transcribing', status: 'active' });
-    const transcript = await transcribeAudio(videoPath, groqKey);
+
+    const [transcript, frameResult] = await Promise.all([
+      transcribeAudio(videoPath, groqKey),
+      extractFrames(videoPath).catch(() => null),
+    ]);
+
+    let onScreenText = null;
+    if (frameResult) {
+      frameDir = frameResult.frameDir;
+      onScreenText = await readOnScreenText(frameResult.framePaths, groqKey).catch(() => null);
+    }
+
     sendSSE(res, 'step', { step: 'transcribing', status: 'done' });
-    sendSSE(res, 'transcript', { transcript });
+    sendSSE(res, 'transcript', { transcript, onScreenText });
 
     // Step 3: Fact-check
     sendSSE(res, 'step', { step: 'analyzing', status: 'active' });
-    const result = await factCheck(transcript, provider, apiKey);
+    const result = await factCheck(transcript, onScreenText, provider, apiKey);
     sendSSE(res, 'step', { step: 'analyzing', status: 'done' });
 
     // Send final result
-    sendSSE(res, 'result', { ...result, transcript });
+    sendSSE(res, 'result', { ...result, transcript, onScreenText });
     sendSSE(res, 'done', {});
   } catch (error) {
     sendSSE(res, 'error', { message: error.message });
   } finally {
-    if (videoPath) {
-      await cleanupFile(videoPath);
-    }
+    if (videoPath) await cleanupFile(videoPath);
+    if (frameDir) await cleanupFrames(frameDir);
     res.end();
   }
 }
