@@ -10,6 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const TMP_DIR = join(__dirname, '..', 'tmp');
 
 const MOBILE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+const DESKTOP_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
 // --- TikTok ---
 
@@ -34,7 +35,6 @@ async function extractTikTokVideo(url) {
 }
 
 async function extractTikTokVideoUrl(html) {
-  // Try embedded JSON data
   const jsonMatch = html.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/);
   if (jsonMatch) {
     const data = JSON.parse(jsonMatch[1]);
@@ -43,7 +43,6 @@ async function extractTikTokVideoUrl(html) {
     if (videoData?.playAddr) return videoData.playAddr;
   }
 
-  // Fallback: regex patterns
   const match = html.match(/"playAddr"\s*:\s*"([^"]+)"/) ||
                 html.match(/"downloadAddr"\s*:\s*"([^"]+)"/);
   if (match) {
@@ -56,47 +55,97 @@ async function extractTikTokVideoUrl(html) {
 // --- Instagram ---
 
 async function extractInstagramVideo(url) {
-  // Normalize URL to get the shortcode
   const shortcodeMatch = url.match(/\/(reel|p)\/([A-Za-z0-9_-]+)/);
   if (!shortcodeMatch) throw new Error('Invalid Instagram URL');
   const shortcode = shortcodeMatch[2];
 
-  // Try the embed page (doesn't require login)
-  const embedUrl = `https://www.instagram.com/p/${shortcode}/embed/`;
-  const embedRes = await fetch(embedUrl, {
+  // Method 1: GraphQL API (no login required)
+  try {
+    const videoUrl = await fetchInstagramGraphQL(shortcode);
+    if (videoUrl) return downloadToFile(videoUrl, url);
+  } catch { /* try next method */ }
+
+  // Method 2: Embed page
+  try {
+    const videoUrl = await fetchInstagramEmbed(shortcode);
+    if (videoUrl) return downloadToFile(videoUrl, url);
+  } catch { /* try next method */ }
+
+  // Method 3: og:video meta tag
+  try {
+    const videoUrl = await fetchInstagramOgVideo(shortcode);
+    if (videoUrl) return downloadToFile(videoUrl, url);
+  } catch { /* give up */ }
+
+  throw new Error('Could not extract video from Instagram. Try again in a few minutes — Instagram may be rate-limiting.');
+}
+
+async function fetchInstagramGraphQL(shortcode) {
+  const res = await fetch('https://www.instagram.com/api/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': DESKTOP_UA,
+      'X-IG-App-ID': '936619743392459',
+      'X-FB-LSD': 'AVqbxe3J_YA',
+      'X-ASBD-ID': '129477',
+      'Sec-Fetch-Site': 'same-origin',
+    },
+    body: new URLSearchParams({
+      lsd: 'AVqbxe3J_YA',
+      doc_id: '10015901848480474',
+      variables: JSON.stringify({ shortcode }),
+    }),
+  });
+
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  const media = data?.data?.xdt_shortcode_media;
+  if (!media) return null;
+
+  // Direct video
+  if (media.video_url) return media.video_url;
+
+  // Carousel — find video in edges
+  const edges = media.edge_sidecar_to_children?.edges;
+  if (edges) {
+    const videoNode = edges.find(e => e.node?.video_url);
+    if (videoNode) return videoNode.node.video_url;
+  }
+
+  return null;
+}
+
+async function fetchInstagramEmbed(shortcode) {
+  const res = await fetch(`https://www.instagram.com/p/${shortcode}/embed/`, {
     headers: { 'User-Agent': MOBILE_UA },
   });
 
-  if (!embedRes.ok) throw new Error(`Failed to fetch Instagram embed: ${embedRes.status}`);
+  if (!res.ok) return null;
 
-  const html = await embedRes.text();
+  const html = await res.text();
+  const match = html.match(/"video_url"\s*:\s*"([^"]+)"/) ||
+                html.match(/"contentUrl"\s*:\s*"([^"]+)"/);
 
-  // Extract video URL from embed page
-  const videoMatch = html.match(/"video_url"\s*:\s*"([^"]+)"/) ||
-                     html.match(/class="EmbeddedMediaImage"[^>]*video_url=([^&"]+)/) ||
-                     html.match(/data-video-url="([^"]+)"/) ||
-                     html.match(/"contentUrl"\s*:\s*"([^"]+)"/);
+  return match ? decodeEntities(match[1]) : null;
+}
 
-  if (!videoMatch) {
-    // Try og:video from the regular page as last resort
-    const pageRes = await fetch(`https://www.instagram.com/p/${shortcode}/`, {
-      headers: { 'User-Agent': MOBILE_UA },
-    });
-    if (pageRes.ok) {
-      const pageHtml = await pageRes.text();
-      const ogMatch = pageHtml.match(/<meta\s+property="og:video"\s+content="([^"]+)"/);
-      if (ogMatch) return downloadToFile(decodeHtmlEntities(ogMatch[1]), url);
-    }
-    throw new Error('Could not extract video from Instagram. The post may be private.');
-  }
+async function fetchInstagramOgVideo(shortcode) {
+  const res = await fetch(`https://www.instagram.com/p/${shortcode}/`, {
+    headers: { 'User-Agent': MOBILE_UA },
+  });
 
-  const videoUrl = decodeHtmlEntities(videoMatch[1]);
-  return downloadToFile(videoUrl, url);
+  if (!res.ok) return null;
+
+  const html = await res.text();
+  const match = html.match(/<meta\s+property="og:video"\s+content="([^"]+)"/);
+  return match ? decodeEntities(match[1]) : null;
 }
 
 // --- Helpers ---
 
-function decodeHtmlEntities(str) {
+function decodeEntities(str) {
   return str
     .replace(/\\u0026/g, '&')
     .replace(/\\u002F/g, '/')
