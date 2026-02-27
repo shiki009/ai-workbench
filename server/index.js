@@ -26,4 +26,5 @@ if (isProd) {
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`GROQ_API_KEY: ${process.env.GROQ_API_KEY ? 'set' : 'NOT SET'}`);
 });
