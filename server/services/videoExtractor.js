@@ -55,7 +55,7 @@ async function extractTikTokVideoUrl(html) {
 // --- Instagram ---
 
 async function extractInstagramVideo(url) {
-  const shortcodeMatch = url.match(/\/(reel|p)\/([A-Za-z0-9_-]+)/);
+  const shortcodeMatch = url.match(/\/(reels?|p)\/([A-Za-z0-9_-]+)/);
   if (!shortcodeMatch) throw new Error('Invalid Instagram URL');
   const shortcode = shortcodeMatch[2];
 
