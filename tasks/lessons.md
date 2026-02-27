@@ -5,24 +5,22 @@ Self-improvement log. After ANY correction from the user, add a rule here to pre
 ## Rules
 
 ### Project-Specific
-- @huggingface/transformers must be excluded from Vite pre-optimization
-- COEP/COOP headers are required in Vite config for Web Workers
-- Image generator requires WebGPU — degrade gracefully without it
-- DOM-based UI with CSS glassmorphism — no canvas rendering for UI
-- All AI inference runs in Web Workers, never on main thread
+- Groq API key is always required (Whisper transcription) even when using another fact-check provider
+- yt-dlp must be installed on the system for video downloading to work
+- Tailwind v4 uses `@import "tailwindcss"` + Vite plugin — no postcss.config or tailwind.config
+- Vite proxies /api to Express on port 3001 — both must run for dev
 
 ### Workflow
 - Always run `npm run build` before marking any task complete
-- Plan first for multi-step tasks — use the planner agent
+- Plan first for multi-step tasks
 - Commit with conventional format, never batch unrelated changes
 - Update this file after every correction
-- When pivoting architecture, keep the valuable core (AI, storage, events) and rebuild the shell
 
 ### Code Patterns
-- New tools must extend BaseTool and register via ToolRegistry
-- Events for all inter-module communication, never direct imports
-- Web Workers for all ML inference, never on main thread
-- Tools render into Workspace card bodies (DOM elements)
+- Named exports only — no default exports
+- SSE via POST + ReadableStream (not EventSource) because we need to send API keys in the body
+- React state machine pattern: idle → loading → done → error
+- Custom hooks for complex state (useAnalysis, useSettings)
 
 ---
-_Last updated: v2.0 pivot from 3D to 2D dashboard_
+_Last updated: v3.0 rewrite from AI Workbench to Video Fact Checker_

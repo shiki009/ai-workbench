@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Space Mono', monospace;
+  --font-display: 'Anton', sans-serif;
+  --color-foreground: #141414;
+  --color-muted: #666666;
+  --color-border: #cccccc;
+  --color-bg: #f5f3f0;
+  --color-card: #ffffff;
+  --color-true: #22c55e;
+  --color-false: #ef4444;
+  --color-misleading: #f59e0b;
+  --color-unverifiable: #94a3b8;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-foreground);
+  min-height: 100vh;
+}
+
+/* Score ring animation */
+@keyframes score-fill {
+  from { stroke-dashoffset: 283; }
+}
+
+.score-ring-circle {
+  animation: score-fill 1s ease-out forwards;
+}
+
+/* Fade in */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+
+/* Pulse dot for active steps */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+
+/* Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Brutalist box shadow utility */
+.shadow-brutal {
+  box-shadow: 4px 4px 0px 0px var(--color-foreground);
+}
+
+.shadow-brutal-sm {
+  box-shadow: 2px 2px 0px 0px var(--color-foreground);
+}

@@ -1,60 +1,66 @@
-# CLAUDE.md — AI Workbench
+# CLAUDE.md — Video Fact Checker
 
 This file is read by Claude Code at the start of every session. It provides persistent context, rules, and project knowledge.
 
 ## Project Overview
 
-AI Workbench is a browser-based dashboard for running AI models locally using Hugging Face Transformers. Users interact with a clean glassmorphism UI to run image classification, text generation, and image generation — all via Web Workers with no server required.
+Video Fact Checker is a web app where users paste a TikTok or Instagram Reel URL, and the app downloads the video, transcribes it with Groq Whisper, and uses an LLM to fact-check the claims. Clean, minimal UI inspired by checkhercount.com.
 
-**Stack:** Vite 6 + @huggingface/transformers 3.x + vanilla JS
-**Storage:** IndexedDB + OPFS (model cache) + localStorage (prefs)
-**Architecture:** Event-driven (EventBus pub/sub), modular managers, Web Workers for ML inference
+**Stack:** React 19 + Vite 6 + Tailwind CSS 4 (frontend) / Express.js (backend)
+**AI:** Groq Whisper for transcription, Groq Llama / Claude / OpenAI for fact-checking
+**Video:** youtube-dl-exec (yt-dlp wrapper) for downloading
 
 ## Build & Run
 
-- `npm run dev` — start Vite dev server (port 5173, COEP/COOP headers enabled)
-- `npm run build` — production build
-- `npm run preview` — preview production build
+- `npm run dev` — start both Vite (port 5173) + Express (port 3001) via concurrently
+- `npm run dev:client` — Vite only
+- `npm run dev:server` — Express only
+- `npm run build` — production build (Vite)
+- `npm start` — production server (serves built frontend + API)
 
 ## Code Style
 
-- ES modules only (import/export), never CommonJS
-- Vanilla JS — no TypeScript, no React, no frameworks
-- Immutable patterns: spread operator, never mutate state directly
-- Class-based architecture with clear manager/tool/component separation
-- Constants in `src/constants.js`, events in `src/events.js`
-- Web Workers for heavy computation — never run ML inference on main thread
-- DOM-based UI with CSS glassmorphism — no canvas rendering for UI
+- React 19 with JSX — functional components, hooks only
+- Tailwind CSS 4 for all styling — no separate CSS files except index.css
+- ES modules only (import/export)
+- Named exports everywhere (no default exports)
+- File naming: PascalCase for components (Header.jsx), camelCase for utilities (api.js)
 
-## Architecture Rules
-
-- **UI Components** (src/ui/) render DOM elements — Sidebar, Workspace, StatusBar, Toast
-- **Tools** extend BaseTool — register via ToolRegistry, render into Workspace cards
-- **AI Layer** (src/ai/) manages Web Workers and model lifecycle
-- **Events** decouple all communication — components never import each other directly
-- New tools MUST: extend BaseTool, register in ToolRegistry, use Web Worker for inference
-
-## File Structure
+## Architecture
 
 ```
-src/
-├── ai/          # AIManager, ModelRegistry, PipelineExecutor, Web Workers
-├── ui/          # Sidebar, Workspace, StatusBar, Toast
-├── tools/       # ToolRegistry, BaseTool, ImageClassifier, TextGenerator, ImageGenerator
-├── storage/     # StorageManager, IndexedDBStore, OPFSStore, ModelCacheManager
-├── onboarding/  # OnboardingOverlay, CapabilityDetector
-├── utils/       # debounce, formatBytes
-├── styles/      # main.css (glassmorphism, layout, components)
-├── constants.js # Tool types, events, storage keys
-├── events.js    # EventBus pub/sub system
-└── main.js      # Application bootstrap
+src/                          # React frontend
+├── components/               # UI components (Header, URLInput, Results, etc.)
+├── services/api.js           # SSE client for /api/analyze
+├── hooks/useAnalysis.js      # State machine hook
+├── App.jsx                   # Main app component
+├── main.jsx                  # Entry point
+└── index.css                 # Tailwind imports + custom animations
+
+server/                       # Express backend
+├── index.js                  # Express entry, port 3001
+├── routes/analyze.js         # POST /api/analyze → SSE streaming
+├── services/
+│   ├── providers.js          # Groq SDK + Claude/OpenAI via fetch
+│   ├── videoExtractor.js     # yt-dlp download
+│   ├── transcriber.js        # Groq Whisper API
+│   └── factChecker.js        # LLM fact-check with structured prompt
+└── utils/cleanup.js          # Temp file deletion
 ```
+
+## Key Design Decisions
+
+- **SSE via POST**: fetch() + ReadableStream — not EventSource — because we POST API keys in the body
+- **No ffmpeg**: Groq Whisper accepts mp4 directly
+- **API keys in localStorage**: Users provide their own keys, passed per-request to backend
+- **Groq always required**: Whisper transcription uses Groq; fact-checking provider is configurable
 
 ## Common Gotchas
 
-- Vite config requires custom COEP/COOP headers for SharedArrayBuffer (Web Workers)
-- @huggingface/transformers is excluded from Vite pre-optimization (too large, dynamic imports)
-- Image generator requires WebGPU — check CapabilityDetector before enabling
+- Vite proxies `/api` to Express on port 3001 — both must run for dev
+- yt-dlp must be installed on the system (`brew install yt-dlp` or `pip install yt-dlp`)
+- Groq API key is always required (even if Claude/OpenAI is the fact-check provider) because Whisper runs on Groq
+- Tailwind v4 uses `@import "tailwindcss"` + Vite plugin — no postcss.config or tailwind.config needed
 
 ## Self-Improvement Protocol
 
@@ -73,6 +79,18 @@ After ANY correction from the user:
 
 - Owner: shiki009 (vladislavshik10@gmail.com)
 - Repo: https://github.com/shiki009/ai-workbench.git
-- All PycharmProjects/ repos are personal projects
+
+## Agent Pipelines
+
+4 pipelines, 13 agent files. Full documentation in `.claude/agents/README.md`.
+
+### Quick Reference
+
+| Pipeline | Command | When | Stages |
+|----------|---------|------|--------|
+| **Feature** | `@saw-orchestrator` | New feature | planner → architect → implementor → tester → reviewer |
+| **Bugfix** | `@saw-bug-orchestrator` | Bug, unknown root cause | triager → fixer → tester → reviewer |
+| **Hotfix** | `@saw-hotfix-orchestrator` | Bug, known root cause | fixer → reviewer |
+| **Refactor** | `@saw-refactor-orchestrator` | Restructure code | analyzer → executor → tester → reviewer |
 
 @tasks/lessons.md

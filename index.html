@@ -3,53 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Workbench</title>
-  <link rel="stylesheet" href="/src/styles/main.css" />
+  <title>VFC</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <div id="app">
-    <header class="header">
-      <div class="header__brand">
-        <span class="header__logo">AI</span>
-        <h1 class="header__title">Workbench</h1>
-      </div>
-      <div class="header__status" id="status-bar"></div>
-      <div class="header__actions">
-        <button class="btn btn--ghost" id="btn-settings" title="Settings">
-          <span class="btn__icon">&#9881;</span>
-        </button>
-      </div>
-    </header>
-
-    <div class="layout">
-      <aside class="sidebar" id="sidebar">
-        <nav class="sidebar__nav" id="tool-nav"></nav>
-      </aside>
-
-      <main class="workspace" id="workspace">
-        <div class="workspace__empty" id="workspace-empty">
-          <p class="workspace__hint">Select a tool from the sidebar to get started</p>
-          <p class="workspace__shortcut">Press <kbd>E</kbd> to toggle the sidebar</p>
-        </div>
-        <div class="workspace__cards" id="workspace-cards"></div>
-      </main>
-    </div>
-
-    <div class="toast-container" id="toast-container"></div>
-  </div>
-
-  <div id="onboarding-overlay" class="onboarding" style="display:none">
-    <div class="onboarding__card glass">
-      <h2 class="onboarding__title" id="onboarding-title"></h2>
-      <div class="onboarding__body" id="onboarding-body"></div>
-      <div class="onboarding__actions">
-        <button class="btn btn--primary" id="onboarding-next">Next</button>
-        <button class="btn btn--ghost" id="onboarding-skip">Skip</button>
-      </div>
-      <div class="onboarding__dots" id="onboarding-dots"></div>
-    </div>
-  </div>
-
-  <script type="module" src="/src/main.js"></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

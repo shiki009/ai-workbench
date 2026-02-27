@@ -4,6 +4,9 @@ dist/
 *.local
 .env
 .env.*
+!.env.example
 *.log
 .idea/
 .vscode/
+.planning/
+server/tmp/

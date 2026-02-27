@@ -3,14 +3,15 @@
 ## Verification Strategy
 
 1. **Build Verification**: `npm run build` must pass — no errors, no warnings
-2. **Dev Server Check**: `npm run dev` must start without errors
+2. **Dev Server Check**: `npm run dev` must start both Vite + Express without errors
 3. **Manual Testing Protocol**:
-   - App loads, sidebar visible with 3 tools
-   - Tool cards open/close from sidebar
-   - AI tools: model downloads, inference runs, results display
-   - Keyboard: E toggles sidebar
-   - Onboarding shows on first visit
-   - Storage: preferences persist on refresh
+   - App loads with centered card and URL input
+   - Settings modal opens, API keys can be entered and saved
+   - URL validation rejects non-TikTok/Instagram URLs
+   - Progress steps animate during analysis
+   - Results show truth score, verdict, and claim breakdown
+   - "Check Another" resets to initial state
+   - Error states display properly
 
 ## Before Marking Any Task Complete
 - ALWAYS run `npm run build`
@@ -19,6 +20,6 @@
 
 ## Future: When Adding Test Framework
 - Prefer Vitest (Vite-native)
-- Unit test utilities, event bus, storage
-- Integration tests for tool lifecycle
-- Worker integration tests with mock messages
+- Unit test hooks (useAnalysis state machine)
+- Integration tests for SSE streaming
+- Backend route tests with mock services

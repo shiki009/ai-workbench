@@ -1,36 +1,39 @@
 # Code Style Rules
 
 ## Language & Modules
-- Vanilla JavaScript only — no TypeScript, no JSX, no frameworks
+- React 19 + JSX for frontend, Node.js for backend
 - ES modules exclusively (import/export), never CommonJS (require)
 - Destructure imports when possible
+- Named exports everywhere — no default exports
+
+## Frontend
+- Functional components with hooks — no class components
+- Tailwind CSS 4 for all styling — no separate CSS modules
+- State management via custom hooks (useAnalysis, useSettings)
+- PascalCase for component files (Header.jsx), camelCase for utilities (api.js)
+
+## Backend
+- Express.js with ES module syntax
+- Services in server/services/, routes in server/routes/
+- Async/await for all async operations
 
 ## Immutability
 - CRITICAL: Create new objects rather than modifying existing ones
 - Use spread operator for object/array updates
-- Never mutate function parameters
+- Never mutate function parameters or React state directly
 
 ## File Organization
-- One class per file, file named after the class
-- Constants in `src/constants.js`, events in `src/events.js`
-- Organize by feature domain: ai/, ui/, tools/, storage/, onboarding/, utils/
+- One component per file, file named after the component
+- Organize by role: components/, services/, hooks/ (frontend); routes/, services/, utils/ (backend)
 - Target: 200-400 lines per file, maximum 800 lines
 
 ## Naming
-- Classes: PascalCase (StorageManager, BaseTool)
-- Methods/functions: camelCase (addCard, handleClick)
-- Constants: UPPER_SNAKE_CASE (TOOL_TYPES, EVENTS.TOOL_ACTIVATE)
-- Files: PascalCase for classes (StorageManager.js), camelCase for utilities (debounce.js)
-- Private methods: prefix with underscore (_updateLayout)
+- Components: PascalCase (Header, URLInput, Results)
+- Hooks: camelCase with "use" prefix (useAnalysis, useSettings)
+- Functions/variables: camelCase (analyzeVideo, handleSubmit)
+- Constants: UPPER_SNAKE_CASE (SYSTEM_PROMPT, URL_PATTERN)
 
 ## Functions
 - Maximum 50 lines per function
 - Maximum 3 levels of nesting
-- No default exports — always named exports
-- Arrow functions for callbacks, regular functions for methods
-
-## UI Code
-- DOM-based UI with CSS glassmorphism
-- Styles in src/styles/main.css with CSS custom properties
-- No inline styles except dynamic values
-- Clean up DOM elements and event listeners in deactivate/dispose methods
+- Arrow functions for callbacks, named functions for exports
