@@ -5,6 +5,7 @@ import { extractFrames, cleanupFrames } from '../services/frameExtractor.js';
 import { readOnScreenText } from '../services/ocrReader.js';
 import { factCheck } from '../services/factChecker.js';
 import { cleanupFile } from '../utils/cleanup.js';
+import { normalizeVideoUrl, isValidVideoUrl } from '../utils/url.js';
 
 const router = Router();
 
@@ -13,11 +14,19 @@ function sendSSE(res, event, data) {
 }
 
 router.post('/analyze', async (req, res) => {
-  const { url, provider = 'groq', apiKeys = {} } = req.body;
+  const rawUrl = req.body?.url;
+  if (rawUrl == null || typeof rawUrl !== 'string') {
+    return res.status(400).json({ error: 'URL is required' });
+  }
 
+  const url = normalizeVideoUrl(rawUrl);
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
+  if (!isValidVideoUrl(url)) {
+    return res.status(400).json({ error: 'Please enter a valid TikTok or Instagram Reel URL' });
+  }
+  const { provider = 'groq', apiKeys = {} } = req.body;
 
   // Fall back to env vars when client doesn't send keys
   const groqKey = apiKeys.groq || process.env.GROQ_API_KEY;

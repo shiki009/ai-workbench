@@ -17,6 +17,7 @@ Self-improvement log. After ANY correction from the user, add a rule here to pre
 - Update this file after every correction
 
 ### Code Patterns
+- Normalize pasted URLs (trim, collapse whitespace/newlines) on both client and server so production runs cleanly every time; validate against allowed TikTok/Instagram domains (including vt.tiktok.com, vm.tiktok.com)
 - Named exports only — no default exports
 - SSE via POST + ReadableStream (not EventSource) because we need to send API keys in the body
 - React state machine pattern: idle → loading → done → error

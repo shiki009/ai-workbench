@@ -1,27 +1,37 @@
 import { useState } from 'react';
-
-const URL_PATTERN = /^https?:\/\/(www\.)?(tiktok\.com|instagram\.com|vm\.tiktok\.com)\/.+/i;
+import { normalizeVideoUrl, isValidVideoUrl } from '../utils/url.js';
 
 export function URLInput({ onSubmit, isLoading }) {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
 
+  const handlePaste = (e) => {
+    const pasted = (e.clipboardData?.getData('text') ?? '').trim();
+    if (!pasted) return;
+    const normalized = normalizeVideoUrl(pasted);
+    if (normalized !== pasted) {
+      e.preventDefault();
+      setUrl(normalized);
+      setError('');
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
 
-    const trimmed = url.trim();
-    if (!trimmed) {
+    const normalized = normalizeVideoUrl(url);
+    if (!normalized) {
       setError('Please enter a URL');
       return;
     }
 
-    if (!URL_PATTERN.test(trimmed)) {
+    if (!isValidVideoUrl(normalized)) {
       setError('Please enter a valid TikTok or Instagram Reel URL');
       return;
     }
 
-    onSubmit(trimmed);
+    onSubmit(normalized);
   };
 
   return (
@@ -31,7 +41,9 @@ export function URLInput({ onSubmit, isLoading }) {
           type="url"
           value={url}
           onChange={(e) => { setUrl(e.target.value); setError(''); }}
-          placeholder="paste-video-url-here"
+          onPaste={handlePaste}
+          placeholder="Paste TikTok or Instagram Reel URL"
+          autoComplete="url"
           disabled={isLoading}
           className="flex-1 px-4 py-4 bg-card text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
         />
