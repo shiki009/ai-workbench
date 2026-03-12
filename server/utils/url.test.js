@@ -4,7 +4,7 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { normalizeVideoUrl, isValidVideoUrl } from './url.js';
+import { normalizeVideoUrl, unwrapRedirectUrl, prepareVideoUrl, isValidVideoUrl } from './url.js';
 
 describe('normalizeVideoUrl', () => {
   it('returns empty string for non-string input', () => {
@@ -35,6 +35,61 @@ describe('normalizeVideoUrl', () => {
   it('leaves valid URL unchanged when already clean', () => {
     const url = 'https://www.tiktok.com/@user/video/7067695578729221378';
     assert.strictEqual(normalizeVideoUrl(url), url);
+  });
+});
+
+describe('unwrapRedirectUrl', () => {
+  it('extracts URL from l.messenger.com redirect', () => {
+    const wrapped = 'https://l.messenger.com/l.php?u=https%3A%2F%2Fwww.tiktok.com%2F%40user%2Fvideo%2F123&h=xxx';
+    assert.strictEqual(unwrapRedirectUrl(wrapped), 'https://www.tiktok.com/@user/video/123');
+  });
+
+  it('extracts URL from lm.facebook.com redirect', () => {
+    const wrapped = 'https://lm.facebook.com/l.php?u=https%3A%2F%2Finstagram.com%2Freel%2FABC123%2F';
+    assert.strictEqual(unwrapRedirectUrl(wrapped), 'https://instagram.com/reel/ABC123/');
+  });
+
+  it('extracts URL from m.facebook.com redirect', () => {
+    const wrapped = 'https://m.facebook.com/l.php?u=https%3A%2F%2Fyoutube.com%2Fshorts%2FdQw4w9WgXcQ';
+    assert.strictEqual(unwrapRedirectUrl(wrapped), 'https://youtube.com/shorts/dQw4w9WgXcQ');
+  });
+
+  it('returns original URL when not a redirect', () => {
+    const direct = 'https://www.tiktok.com/@user/video/123';
+    assert.strictEqual(unwrapRedirectUrl(direct), direct);
+  });
+
+  it('returns original when host not in redirect list', () => {
+    const other = 'https://other.com/l.php?u=https%3A%2F%2Ftiktok.com%2F%40u%2Fvideo%2F1';
+    assert.strictEqual(unwrapRedirectUrl(other), other);
+  });
+
+  it('returns original when no u param', () => {
+    const noU = 'https://l.messenger.com/l.php?h=xxx';
+    assert.strictEqual(unwrapRedirectUrl(noU), noU);
+  });
+});
+
+describe('prepareVideoUrl', () => {
+  it('unwrap + validate: Messenger-wrapped TikTok URL is valid', () => {
+    const wrapped = 'https://l.messenger.com/l.php?u=https%3A%2F%2Fwww.tiktok.com%2F%40user%2Fvideo%2F7067695578729221378';
+    const prepared = prepareVideoUrl(wrapped);
+    assert.strictEqual(prepared, 'https://www.tiktok.com/@user/video/7067695578729221378');
+    assert.strictEqual(isValidVideoUrl(prepared), true);
+  });
+
+  it('unwrap + validate: Facebook-wrapped Instagram reel is valid', () => {
+    const wrapped = 'https://lm.facebook.com/l.php?u=https%3A%2F%2Fwww.instagram.com%2Freel%2FABC123%2F';
+    const prepared = prepareVideoUrl(wrapped);
+    assert.strictEqual(prepared, 'https://www.instagram.com/reel/ABC123/');
+    assert.strictEqual(isValidVideoUrl(prepared), true);
+  });
+
+  it('unwrap + validate: wrapped YouTube Shorts is valid', () => {
+    const wrapped = 'https://l.messenger.com/l.php?u=https%3A%2F%2Fyoutube.com%2Fshorts%2FdQw4w9WgXcQ';
+    const prepared = prepareVideoUrl(wrapped);
+    assert.strictEqual(prepared, 'https://youtube.com/shorts/dQw4w9WgXcQ');
+    assert.strictEqual(isValidVideoUrl(prepared), true);
   });
 });
 

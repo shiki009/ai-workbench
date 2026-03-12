@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { normalizeVideoUrl, isValidVideoUrl } from '../utils/url.js';
+import { prepareVideoUrl, isValidVideoUrl } from '../utils/url.js';
 
 export function URLInput({ onSubmit, isLoading }) {
   const [url, setUrl] = useState('');
@@ -8,10 +8,10 @@ export function URLInput({ onSubmit, isLoading }) {
   const handlePaste = (e) => {
     const pasted = (e.clipboardData?.getData('text') ?? '').trim();
     if (!pasted) return;
-    const normalized = normalizeVideoUrl(pasted);
-    if (normalized !== pasted) {
+    const prepared = prepareVideoUrl(pasted);
+    if (prepared !== pasted) {
       e.preventDefault();
-      setUrl(normalized);
+      setUrl(prepared);
       setError('');
     }
   };
@@ -20,18 +20,18 @@ export function URLInput({ onSubmit, isLoading }) {
     e.preventDefault();
     setError('');
 
-    const normalized = normalizeVideoUrl(url);
-    if (!normalized) {
+    const prepared = prepareVideoUrl(url);
+    if (!prepared) {
       setError('Please enter a URL');
       return;
     }
 
-    if (!isValidVideoUrl(normalized)) {
+    if (!isValidVideoUrl(prepared)) {
       setError('Please enter a valid TikTok, Instagram Reel, or YouTube Shorts URL');
       return;
     }
 
-    onSubmit(normalized);
+    onSubmit(prepared);
   };
 
   return (

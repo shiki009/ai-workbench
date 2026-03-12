@@ -5,7 +5,7 @@ import { extractFrames, cleanupFrames } from '../services/frameExtractor.js';
 import { readOnScreenText } from '../services/ocrReader.js';
 import { factCheck } from '../services/factChecker.js';
 import { cleanupFile } from '../utils/cleanup.js';
-import { normalizeVideoUrl, isValidVideoUrl } from '../utils/url.js';
+import { prepareVideoUrl, isValidVideoUrl } from '../utils/url.js';
 
 const router = Router();
 
@@ -19,7 +19,7 @@ router.post('/analyze', async (req, res) => {
     return res.status(400).json({ error: 'URL is required' });
   }
 
-  const url = normalizeVideoUrl(rawUrl);
+  const url = prepareVideoUrl(rawUrl);
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
