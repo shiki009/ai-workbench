@@ -3,7 +3,7 @@ import { prepareVideoUrl, isValidVideoUrl } from '../utils/url.js';
 
 const EXAMPLE_LINKS = [
   { label: 'YouTube Shorts', url: 'https://www.youtube.com/shorts/O9wLadU2joc' },
-  { label: 'Rick Roll', url: 'https://www.youtube.com/shorts/dQw4w9WgXcQ' },
+  { label: 'Random', url: 'https://www.youtube.com/shorts/dQw4w9WgXcQ' },
 ];
 
 export function URLInput({ onSubmit, isLoading }) {

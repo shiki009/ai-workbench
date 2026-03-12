@@ -10,7 +10,7 @@ import { useAnalysis } from './hooks/useAnalysis.js';
 export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, updateSettings] = useSettings();
-  const { state, steps, result, error, analyze, reset } = useAnalysis();
+  const { state, steps, result, error, analyzedUrl, analyze, reset } = useAnalysis();
 
   const handleSubmit = (url) => {
     const { apiKeys, provider } = settings;
@@ -72,7 +72,7 @@ export function App() {
 
           {/* Results */}
           {state === 'done' && result && (
-            <Results result={result} onReset={reset} />
+            <Results result={result} analyzedUrl={analyzedUrl} onReset={reset} />
           )}
 
           {/* Error */}

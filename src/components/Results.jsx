@@ -39,11 +39,13 @@ const VERDICT_STYLES = {
   'No Factual Claims': 'text-muted',
 };
 
-export function Results({ result, onReset }) {
-  const [showTranscript, setShowTranscript] = useState(false);
+const RICK_ROLL_ID = 'dQw4w9WgXcQ';
 
+export function Results({ result, analyzedUrl, onReset }) {
+  const [showTranscript, setShowTranscript] = useState(false);
   const [showOnScreen, setShowOnScreen] = useState(false);
   const { truthScore, verdict, summary, claims, transcript, onScreenText } = result;
+  const isRickRoll = analyzedUrl && analyzedUrl.includes(RICK_ROLL_ID);
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -54,6 +56,19 @@ export function Results({ result, onReset }) {
           <p className={`text-lg font-bold uppercase tracking-widest ${VERDICT_STYLES[verdict] || 'text-muted'}`}>
             {verdict}
           </p>
+        </div>
+      )}
+
+      {/* Rick Roll Easter egg — play the video */}
+      {isRickRoll && (
+        <div className="aspect-video max-w-full overflow-hidden rounded border-2 border-foreground shadow-brutal">
+          <iframe
+            title="Video"
+            className="h-full w-full"
+            src={`https://www.youtube.com/embed/${RICK_ROLL_ID}?autoplay=1&mute=0`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
         </div>
       )}
 

@@ -8,12 +8,14 @@ const INITIAL_STEPS = {
 };
 
 export function useAnalysis() {
-  const [state, setState] = useState('idle'); // idle | loading | done | error
+  const [state, setState] = useState('idle');
   const [steps, setSteps] = useState(INITIAL_STEPS);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [analyzedUrl, setAnalyzedUrl] = useState(null);
 
   const analyze = useCallback(async (url, apiKeys, provider) => {
+    setAnalyzedUrl(url);
     setState('loading');
     setSteps(INITIAL_STEPS);
     setResult(null);
@@ -48,7 +50,8 @@ export function useAnalysis() {
     setSteps(INITIAL_STEPS);
     setResult(null);
     setError(null);
+    setAnalyzedUrl(null);
   }, []);
 
-  return { state, steps, result, error, analyze, reset };
+  return { state, steps, result, error, analyzedUrl, analyze, reset };
 }
