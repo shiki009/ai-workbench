@@ -1,8 +1,8 @@
 /**
- * Allowed TikTok/Instagram video URL hostnames (no subdomains except known short links).
- * Supports: tiktok.com, www.tiktok.com, vm.tiktok.com, vt.tiktok.com, instagram.com, www.instagram.com
+ * Allowed video URL hostnames: TikTok, Instagram, YouTube Shorts.
+ * Supports: tiktok.com, vm/vt.tiktok.com, instagram.com, youtube.com/shorts, youtube.com/watch, youtu.be
  */
-const VIDEO_URL_PATTERN = /^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com|vt\.tiktok\.com|instagram\.com)\/.+/i;
+const VIDEO_URL_PATTERN = /^https?:\/\/((www\.)?(tiktok\.com|vm\.tiktok\.com|vt\.tiktok\.com|instagram\.com)\/.+|(www\.)?youtube\.com\/(shorts\/[A-Za-z0-9_-]+|watch\?v=[A-Za-z0-9_-]+)|youtu\.be\/[A-Za-z0-9_-]+)/i;
 
 /**
  * Normalize a pasted or typed video URL so it works reliably with downloaders.
@@ -16,7 +16,7 @@ export function normalizeVideoUrl(input) {
 }
 
 /**
- * Check if a string is a valid TikTok or Instagram Reel URL we support.
+ * Check if a string is a valid TikTok, Instagram Reel, or YouTube Shorts URL we support.
  * @param {string} url - Normalized URL
  * @returns {boolean}
  */

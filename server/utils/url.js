@@ -3,7 +3,7 @@
  * Kept in sync with src/utils/url.js so pasted URLs work reliably in production.
  */
 
-const VIDEO_URL_PATTERN = /^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com|vt\.tiktok\.com|instagram\.com)\/.+/i;
+const VIDEO_URL_PATTERN = /^https?:\/\/((www\.)?(tiktok\.com|vm\.tiktok\.com|vt\.tiktok\.com|instagram\.com)\/.+|(www\.)?youtube\.com\/(shorts\/[A-Za-z0-9_-]+|watch\?v=[A-Za-z0-9_-]+)|youtu\.be\/[A-Za-z0-9_-]+)/i;
 
 /**
  * Normalize URL: trim and collapse any whitespace/newlines (paste-safe).
@@ -16,7 +16,7 @@ export function normalizeVideoUrl(input) {
 }
 
 /**
- * Check if URL is a supported TikTok or Instagram video URL.
+ * Check if URL is a supported TikTok, Instagram Reel, or YouTube Shorts video URL.
  * @param {string} url
  * @returns {boolean}
  */
