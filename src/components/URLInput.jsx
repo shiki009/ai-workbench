@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { prepareVideoUrl, isValidVideoUrl } from '../utils/url.js';
 
 const EXAMPLE_LINKS = [
-  { label: 'YouTube Shorts', url: 'https://www.youtube.com/shorts/jNQXAC9IVRw' },
-  { label: 'TikTok', url: 'https://www.tiktok.com/@tiktok/video/7106594312292453678' },
-  { label: 'Instagram Reel', url: 'https://www.instagram.com/reel/Ch5r_U0gvxs/' },
+  { label: 'YouTube Shorts', url: 'https://www.youtube.com/shorts/O9wLadU2joc' },
+  { label: 'Rick Roll', url: 'https://www.youtube.com/shorts/dQw4w9WgXcQ' },
 ];
 
 export function URLInput({ onSubmit, isLoading }) {
