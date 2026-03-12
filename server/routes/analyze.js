@@ -24,7 +24,7 @@ router.post('/analyze', async (req, res) => {
     return res.status(400).json({ error: 'URL is required' });
   }
   if (!isValidVideoUrl(url)) {
-    return res.status(400).json({ error: 'Please enter a valid TikTok or Instagram Reel URL' });
+    return res.status(400).json({ error: 'Please enter a valid TikTok, Instagram Reel, or YouTube Shorts URL' });
   }
   const { provider = 'groq', apiKeys = {} } = req.body;
 

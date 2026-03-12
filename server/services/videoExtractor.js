@@ -143,6 +143,21 @@ async function fetchInstagramOgVideo(shortcode) {
   return match ? decodeEntities(match[1]) : null;
 }
 
+// --- YouTube ---
+
+async function extractYouTubeVideo(url) {
+  const outputPath = join(TMP_DIR, `${randomUUID()}.mp4`);
+  await execFileAsync('yt-dlp', [
+    '-o', outputPath,
+    '-f', 'worstaudio[ext=m4a]/worstvideo[ext=mp4]/worst',
+    '--no-check-certificates',
+    '--no-warnings',
+    '--no-playlist',
+    url,
+  ]);
+  return outputPath;
+}
+
 // --- Helpers ---
 
 function decodeEntities(str) {
@@ -189,6 +204,7 @@ export async function downloadVideo(url) {
 
   if (/instagram\.com/i.test(url)) return extractInstagramVideo(url);
   if (/tiktok\.com/i.test(url)) return extractTikTokVideo(url);
+  if (/youtube\.com|youtu\.be/i.test(url)) return extractYouTubeVideo(url);
 
-  throw new Error('Unsupported platform. Only TikTok and Instagram are supported.');
+  throw new Error('Unsupported platform. Only TikTok, Instagram, and YouTube are supported.');
 }

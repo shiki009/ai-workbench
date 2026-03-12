@@ -27,7 +27,7 @@ export function URLInput({ onSubmit, isLoading }) {
     }
 
     if (!isValidVideoUrl(normalized)) {
-      setError('Please enter a valid TikTok or Instagram Reel URL');
+      setError('Please enter a valid TikTok, Instagram Reel, or YouTube Shorts URL');
       return;
     }
 
@@ -42,7 +42,7 @@ export function URLInput({ onSubmit, isLoading }) {
           value={url}
           onChange={(e) => { setUrl(e.target.value); setError(''); }}
           onPaste={handlePaste}
-          placeholder="Paste TikTok or Instagram Reel URL"
+          placeholder="Paste TikTok, Instagram Reel, or YouTube Shorts URL"
           autoComplete="url"
           disabled={isLoading}
           className="flex-1 px-4 py-4 bg-card text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
