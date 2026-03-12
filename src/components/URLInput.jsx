@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { prepareVideoUrl, isValidVideoUrl } from '../utils/url.js';
 
+const EXAMPLE_LINKS = [
+  { label: 'YouTube Shorts', url: 'https://www.youtube.com/shorts/jNQXAC9IVRw' },
+  { label: 'TikTok', url: 'https://www.tiktok.com/@tiktok/video/7106594312292453678' },
+  { label: 'Instagram Reel', url: 'https://www.instagram.com/reel/Ch5r_U0gvxs/' },
+];
+
 export function URLInput({ onSubmit, isLoading }) {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
@@ -63,6 +69,26 @@ export function URLInput({ onSubmit, isLoading }) {
       {error && (
         <p className="mt-3 text-sm font-bold text-false">{error}</p>
       )}
+      <p className="mt-4 text-xs text-muted uppercase tracking-wider mb-2">Try with</p>
+      <div className="flex flex-wrap gap-2">
+        {EXAMPLE_LINKS.map(({ label, url }) => (
+          <button
+            key={url}
+            type="button"
+            onClick={() => {
+              setUrl(url);
+              setError('');
+            }}
+            disabled={isLoading}
+            className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide border border-muted text-muted hover:border-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-[10px] text-muted/80">
+        No results? Video may be age-restricted, private, have no speech, or platform may be rate-limiting.
+      </p>
     </form>
   );
 }

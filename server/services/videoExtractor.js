@@ -145,7 +145,18 @@ async function fetchInstagramOgVideo(shortcode) {
 
 // --- YouTube ---
 
+function cleanYouTubeUrl(url) {
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.delete('si');
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 async function extractYouTubeVideo(url) {
+  const cleanUrl = cleanYouTubeUrl(url);
   const outputPath = join(TMP_DIR, `${randomUUID()}.mp4`);
   await execFileAsync('yt-dlp', [
     '-o', outputPath,
@@ -153,7 +164,7 @@ async function extractYouTubeVideo(url) {
     '--no-check-certificates',
     '--no-warnings',
     '--no-playlist',
-    url,
+    cleanUrl,
   ]);
   return outputPath;
 }
