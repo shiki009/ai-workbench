@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ClaimCard } from './ClaimCard.jsx';
+import { getEmbedInfo } from '../utils/url.js';
 
 function ScoreRing({ score }) {
   const circumference = 2 * Math.PI * 45;
@@ -45,7 +46,8 @@ export function Results({ result, analyzedUrl, onReset }) {
   const [showTranscript, setShowTranscript] = useState(false);
   const [showOnScreen, setShowOnScreen] = useState(false);
   const { truthScore, verdict, summary, claims, transcript, onScreenText } = result;
-  const isRickRoll = analyzedUrl && analyzedUrl.includes(RICK_ROLL_ID);
+  const embed = getEmbedInfo(analyzedUrl);
+  const isRickRoll = embed?.type === 'youtube' && embed?.id === RICK_ROLL_ID;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -59,16 +61,34 @@ export function Results({ result, analyzedUrl, onReset }) {
         </div>
       )}
 
-      {/* Rick Roll Easter egg — play the video */}
-      {isRickRoll && (
+      {/* Video embed — YouTube, TikTok, Instagram */}
+      {embed && (
         <div className="aspect-video max-w-full overflow-hidden rounded border-2 border-foreground shadow-brutal">
-          <iframe
-            title="Video"
-            className="h-full w-full"
-            src={`https://www.youtube.com/embed/${RICK_ROLL_ID}?autoplay=1&mute=0`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          {embed.type === 'youtube' && (
+            <iframe
+              title="Video"
+              className="h-full w-full"
+              src={`https://www.youtube.com/embed/${embed.id}${isRickRoll ? '?autoplay=1&mute=0' : ''}`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          )}
+          {embed.type === 'tiktok' && (
+            <iframe
+              title="Video"
+              className="h-full w-full"
+              src={`https://www.tiktok.com/embed/v2/${embed.id}`}
+              allowFullScreen
+            />
+          )}
+          {embed.type === 'instagram' && (
+            <iframe
+              title="Video"
+              className="h-full w-full"
+              src={`https://www.instagram.com/${embed.path || 'reel'}/${embed.id}/embed/`}
+              allow="encrypted-media"
+            />
+          )}
         </div>
       )}
 

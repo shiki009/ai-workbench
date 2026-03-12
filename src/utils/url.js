@@ -48,6 +48,41 @@ export function prepareVideoUrl(input) {
 }
 
 /**
+ * Extract embed info from a video URL for in-page playback.
+ * @param {string} url - Analyzed URL (e.g. after prepareVideoUrl)
+ * @returns {{ type: 'youtube'|'tiktok'|'instagram', id: string, path?: 'reel'|'p' }|null}
+ */
+export function getEmbedInfo(url) {
+  if (!url || typeof url !== 'string') return null;
+  try {
+    const u = new URL(url.trim());
+    const host = u.hostname.toLowerCase();
+
+    if (host.includes('youtube.com') || host === 'youtu.be') {
+      let id = null;
+      if (host === 'youtu.be') id = u.pathname.slice(1).split('/')[0];
+      else if (u.pathname.includes('/shorts/')) id = u.pathname.split('/shorts/')[1]?.split('/')[0];
+      else id = u.searchParams.get('v');
+      if (id) return { type: 'youtube', id };
+    }
+
+    if (host.includes('tiktok.com') && !host.startsWith('vm.') && !host.startsWith('vt.')) {
+      const m = u.pathname.match(/\/video\/(\d+)/);
+      if (m) return { type: 'tiktok', id: m[1] };
+    }
+
+    if (host.includes('instagram.com')) {
+      const reelM = u.pathname.match(/\/reel\/([A-Za-z0-9_-]+)/);
+      const pM = u.pathname.match(/\/p\/([A-Za-z0-9_-]+)/);
+      const shortcode = reelM?.[1] ?? pM?.[1];
+      const path = reelM ? 'reel' : 'p';
+      if (shortcode) return { type: 'instagram', id: shortcode, path };
+    }
+  } catch {}
+  return null;
+}
+
+/**
  * Check if a string is a valid TikTok, Instagram Reel, or YouTube Shorts URL we support.
  * @param {string} url - Normalized URL (use prepareVideoUrl first if input may be wrapped)
  * @returns {boolean}
