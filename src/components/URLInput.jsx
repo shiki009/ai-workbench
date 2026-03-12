@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { prepareVideoUrl, isValidVideoUrl } from '../utils/url.js';
 
 const EXAMPLE_LINKS = [
-  { label: 'YouTube Shorts', url: 'https://www.youtube.com/shorts/O9wLadU2joc' },
+  { label: 'YouTube Shorts', url: 'https://youtube.com/shorts/pmhz_9NgsqY?si=oWlTH3Oy4oQw49nB' },
   { label: 'Random', url: 'https://www.youtube.com/shorts/dQw4w9WgXcQ' },
 ];
 
