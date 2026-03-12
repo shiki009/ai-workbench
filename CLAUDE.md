@@ -4,7 +4,7 @@ This file is read by Claude Code at the start of every session. It provides pers
 
 ## Project Overview
 
-Video Fact Checker is a web app where users paste a TikTok or Instagram Reel URL, and the app downloads the video, transcribes it with Groq Whisper, and uses an LLM to fact-check the claims. Clean, minimal UI inspired by checkhercount.com.
+Video Fact Checker is a web app where users paste a TikTok, Instagram Reel, or YouTube Shorts URL, and the app downloads the video, transcribes it with Groq Whisper, and uses an LLM to fact-check the claims. Clean, minimal UI inspired by checkhercount.com.
 
 **Stack:** React 19 + Vite 6 + Tailwind CSS 4 (frontend) / Express.js (backend)
 **AI:** Groq Whisper for transcription, Groq Llama / Claude / OpenAI for fact-checking
