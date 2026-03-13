@@ -41,6 +41,7 @@ const VERDICT_STYLES = {
 };
 
 const RICK_ROLL_ID = 'dQw4w9WgXcQ';
+const PLATFORM_LABELS = { youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram' };
 
 export function Results({ result, analyzedUrl, onReset }) {
   const [showTranscript, setShowTranscript] = useState(false);
@@ -49,9 +50,15 @@ export function Results({ result, analyzedUrl, onReset }) {
   const { truthScore, verdict, summary, claims, transcript, onScreenText } = result;
   const embed = getEmbedInfo(analyzedUrl);
   const isRickRoll = embed?.type === 'youtube' && embed?.id === RICK_ROLL_ID;
+  const platformLabel = embed ? PLATFORM_LABELS[embed.type] : null;
 
   return (
     <div className="animate-fade-in space-y-6">
+      {platformLabel && (
+        <span className="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider border border-muted text-muted">
+          {platformLabel}
+        </span>
+      )}
       {/* Score */}
       {truthScore !== null && (
         <div className="text-center space-y-3">
