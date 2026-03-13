@@ -11,7 +11,8 @@ Your job:
 2. Evaluate each claim as TRUE, FALSE, MISLEADING, or UNVERIFIABLE
 3. Indicate whether the claim came from "audio", "on-screen", or "both"
 4. Provide a brief explanation for each verdict
-5. Give an overall truth score from 0 to 100
+5. For claims you can verify, add up to 2 "sources" URLs (fact-check sites, news articles). Omit or use [] if none
+6. Give an overall truth score from 0 to 100
 
 Respond ONLY with valid JSON in this exact format:
 {
@@ -23,7 +24,8 @@ Respond ONLY with valid JSON in this exact format:
       "claim": "<the specific claim made>",
       "source": "<audio | on-screen | both>",
       "verdict": "<TRUE | FALSE | MISLEADING | UNVERIFIABLE>",
-      "explanation": "<brief explanation with reasoning>"
+      "explanation": "<brief explanation with reasoning>",
+      "sources": ["<optional URL to fact-check or news article>", "<optional second URL>"]
     }
   ]
 }

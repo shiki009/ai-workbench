@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from './components/Header.jsx';
 import { Footer } from './components/Footer.jsx';
 import { URLInput } from './components/URLInput.jsx';
@@ -6,11 +6,25 @@ import { ProgressSteps } from './components/ProgressSteps.jsx';
 import { Results } from './components/Results.jsx';
 import { SettingsModal, useSettings } from './components/SettingsModal.jsx';
 import { useAnalysis } from './hooks/useAnalysis.js';
+import { useRecentUrls } from './hooks/useRecentUrls.js';
 
 export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, updateSettings] = useSettings();
   const { state, steps, result, error, analyzedUrl, analyze, reset } = useAnalysis();
+  const { add: addToHistory, get: getRecent } = useRecentUrls();
+  const [recentUrls, setRecentUrls] = useState([]);
+
+  useEffect(() => {
+    setRecentUrls(getRecent());
+  }, [state]);
+
+  useEffect(() => {
+    if (state === 'done' && analyzedUrl) {
+      addToHistory(analyzedUrl);
+      setRecentUrls(getRecent());
+    }
+  }, [state, analyzedUrl, addToHistory, getRecent]);
 
   const handleSubmit = (url) => {
     const { apiKeys, provider } = settings;
@@ -64,7 +78,11 @@ export function App() {
         <div className="w-full max-w-xl">
           {/* URL Input — show on idle and loading */}
           {(state === 'idle' || state === 'loading') && (
-            <URLInput onSubmit={handleSubmit} isLoading={state === 'loading'} />
+            <URLInput
+              onSubmit={handleSubmit}
+              isLoading={state === 'loading'}
+              recentUrls={recentUrls}
+            />
           )}
 
           {/* Progress steps */}
@@ -72,15 +90,35 @@ export function App() {
 
           {/* Results */}
           {state === 'done' && result && (
-            <Results result={result} analyzedUrl={analyzedUrl} onReset={reset} />
+            <Results
+              result={result}
+              analyzedUrl={analyzedUrl}
+              onReset={reset}
+            />
           )}
 
           {/* Error */}
           {state === 'error' && (
             <div className="space-y-4 animate-fade-in">
               <div className="bg-card border-2 border-foreground shadow-brutal p-4">
-                <p className="text-sm text-false font-bold uppercase tracking-wide mb-1">Error</p>
-                <p className="text-sm text-foreground">{error}</p>
+                {(() => {
+                  const err = typeof error === 'object' ? error : { message: error, code: 'unknown' };
+                  const titles = {
+                    download: 'Download failed',
+                    transcription: 'Transcription failed',
+                    rate_limit: 'Rate limited',
+                    analysis: 'Analysis failed',
+                    unknown: 'Error',
+                  };
+                  return (
+                    <>
+                      <p className="text-sm text-false font-bold uppercase tracking-wide mb-1">
+                        {titles[err.code] || titles.unknown}
+                      </p>
+                      <p className="text-sm text-foreground">{err.message}</p>
+                    </>
+                  );
+                })()}
               </div>
               <button
                 onClick={reset}

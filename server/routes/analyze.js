@@ -82,7 +82,13 @@ router.post('/analyze', async (req, res) => {
     sendSSE(res, 'result', { ...result, transcript, onScreenText });
     sendSSE(res, 'done', {});
   } catch (error) {
-    sendSSE(res, 'error', { message: error.message });
+    const msg = error.message || 'Something went wrong';
+    let code = 'unknown';
+    if (/download|extract|fetch|yt-dlp|Unsupported platform/i.test(msg)) code = 'download';
+    else if (/transcri|whisper|audio|empty/i.test(msg) || msg.includes('no speech')) code = 'transcription';
+    else if (/rate.?limit|try again|403|429/i.test(msg)) code = 'rate_limit';
+    else if (/parse|JSON/i.test(msg)) code = 'analysis';
+    sendSSE(res, 'error', { message: msg, code });
   } finally {
     if (videoPath) await cleanupFile(videoPath);
     if (frameDir) await cleanupFrames(frameDir);

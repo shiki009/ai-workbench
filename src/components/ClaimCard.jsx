@@ -11,8 +11,9 @@ const SOURCE_LABELS = {
   'both': 'SPOKEN + ON-SCREEN',
 };
 
-export function ClaimCard({ claim, verdict, explanation, source }) {
+export function ClaimCard({ claim, verdict, explanation, source, sources }) {
   const style = VERDICT_STYLES[verdict] || VERDICT_STYLES.UNVERIFIABLE;
+  const links = Array.isArray(sources) ? sources.filter(Boolean) : [];
 
   return (
     <div className="bg-card border-2 border-foreground shadow-brutal-sm p-4 animate-fade-in">
@@ -27,6 +28,21 @@ export function ClaimCard({ claim, verdict, explanation, source }) {
         <p className="text-xs text-muted mt-2 uppercase tracking-wider">
           Source: {SOURCE_LABELS[source] || source}
         </p>
+      )}
+      {links.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {links.map((href, i) => (
+            <a
+              key={i}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-foreground underline underline-offset-2 hover:text-muted"
+            >
+              Source {i + 1}
+            </a>
+          ))}
+        </div>
       )}
     </div>
   );

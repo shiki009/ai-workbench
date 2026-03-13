@@ -45,6 +45,7 @@ const RICK_ROLL_ID = 'dQw4w9WgXcQ';
 export function Results({ result, analyzedUrl, onReset }) {
   const [showTranscript, setShowTranscript] = useState(false);
   const [showOnScreen, setShowOnScreen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { truthScore, verdict, summary, claims, transcript, onScreenText } = result;
   const embed = getEmbedInfo(analyzedUrl);
   const isRickRoll = embed?.type === 'youtube' && embed?.id === RICK_ROLL_ID;
@@ -92,9 +93,24 @@ export function Results({ result, analyzedUrl, onReset }) {
         </div>
       )}
 
-      {/* Summary */}
+      {/* Summary + Copy */}
       <div className="bg-card border-2 border-foreground shadow-brutal p-4">
-        <p className="text-sm text-foreground">{summary}</p>
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-sm text-foreground flex-1">{summary}</p>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(summary);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              } catch {}
+            }}
+            className="shrink-0 px-3 py-1.5 text-xs font-bold uppercase tracking-wider border border-foreground text-foreground hover:bg-foreground hover:text-card transition-colors"
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
       </div>
 
       {/* Claims */}

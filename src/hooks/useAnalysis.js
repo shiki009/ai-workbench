@@ -34,13 +34,13 @@ export function useAnalysis() {
             setState('done');
             break;
           case 'error':
-            setError(data.message);
+            setError({ message: data.message, code: data.code });
             setState('error');
             break;
         }
       });
     } catch (err) {
-      setError(err.message);
+      setError({ message: err.message, code: 'unknown' });
       setState('error');
     }
   }, []);

@@ -6,7 +6,7 @@ const EXAMPLE_LINKS = [
   { label: 'Random', url: 'https://www.youtube.com/shorts/dQw4w9WgXcQ' },
 ];
 
-export function URLInput({ onSubmit, isLoading }) {
+export function URLInput({ onSubmit, isLoading, recentUrls = [] }) {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
 
@@ -67,6 +67,25 @@ export function URLInput({ onSubmit, isLoading }) {
       </div>
       {error && (
         <p className="mt-3 text-sm font-bold text-false">{error}</p>
+      )}
+      {recentUrls.length > 0 && (
+        <>
+          <p className="mt-4 text-xs text-muted uppercase tracking-wider mb-2">Recent</p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {recentUrls.map((u) => (
+              <button
+                key={u}
+                type="button"
+                onClick={() => onSubmit(u)}
+                disabled={isLoading}
+                className="max-w-full truncate px-3 py-1.5 text-xs font-medium text-muted border border-muted hover:border-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+                title={u}
+              >
+                {(() => { const s = u.replace(/^https?:\/\/(www\.)?/i, ''); return s.length > 50 ? s.slice(0, 50) + '…' : s; })()}
+              </button>
+            ))}
+          </div>
+        </>
       )}
       <p className="mt-4 text-xs text-muted uppercase tracking-wider mb-2">Try with</p>
       <div className="flex flex-wrap gap-2">
